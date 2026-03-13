@@ -554,7 +554,7 @@ def test_feather_trades_timerange_filter_subset(feather_dh, trades_full, timeran
 def test_feather_trades_timerange_pushdown_fallback(
     feather_dh, trades_full, timerange_mid, monkeypatch, caplog
 ):
-    # Pushdown filter should fail, so fallback should load the entire file
+    # Pushdown filter should fail, but pandas filtering still applies
     import freqtrade.data.history.datahandlers.featherdatahandler as fdh
 
     def raise_err(*args, **kwargs):
@@ -566,7 +566,11 @@ def test_feather_trades_timerange_pushdown_fallback(
     with caplog.at_level("WARNING"):
         out = feather_dh.trades_load("XRP/ETH", TradingMode.SPOT, timerange=timerange_mid)
 
-    assert len(out) == len(trades_full)
+    # Even with Arrow fallback, pandas filtering still applies
+    assert not out.empty
+    assert out["timestamp"].min() >= timerange_mid.startts
+    assert out["timestamp"].max() <= timerange_mid.stopts
+    assert len(out) < len(trades_full)  # Data should be filtered
     assert any(
         "Unable to use Arrow filtering, loading entire trades file" in r.message
         for r in caplog.records

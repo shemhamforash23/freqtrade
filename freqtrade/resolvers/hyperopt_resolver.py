@@ -44,6 +44,15 @@ class HyperOptLossResolver(IResolver):
             hyperoptloss_name, config, kwargs={}, extra_dir=config.get("hyperopt_path")
         )
 
+        # Check if MCPT is enabled for Hyperopt
+        if config.get("mcpt", {}).get("hyperopt", {}).get("enabled", False):
+            from freqtrade.optimize.hyperopt_loss.mcpt_loss_wrapper import MCPTLossWrapper
+
+            logger.info(
+                f"MCPT: Wrapping {hyperoptloss.__class__.__name__} with statistical penalty."
+            )
+            hyperoptloss = MCPTLossWrapper(hyperoptloss, config)
+
         # Assign timeframe to be used in hyperopt
         hyperoptloss.__class__.timeframe = str(config["timeframe"])
 

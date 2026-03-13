@@ -177,7 +177,7 @@ class IResolver:
                     directory=_path, object_name=object_name, add_source=add_source
                 )
                 if module:
-                    logger.info(
+                    logger.debug(
                         f"Using resolved {cls.object_type.__name__.lower()[1:]} {object_name} "
                         f"from '{module_path}'..."
                     )
