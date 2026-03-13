@@ -116,7 +116,8 @@ class FeatherDataHandler(IDataHandler):
         """
         Build Arrow predicate filter for timerange filtering.
         Treats 0 as unbounded (no filter on that side).
-        :param timerange: TimeRange object with start/stop timestamps
+        Converts timerange timestamps (seconds) to milliseconds for comparison with trades data.
+        :param timerange: TimeRange object with start/stop timestamps in seconds
         :return: Arrow filter expression or None if fully unbounded
         """
         if not timerange:
@@ -132,10 +133,15 @@ class FeatherDataHandler(IDataHandler):
         ts_field = dataset.field("timestamp")
         exprs = []
 
+        # timerange.startts/stopts are already in milliseconds
         if start_set:
-            exprs.append(ts_field >= timerange.startts)
+            start_ms = int(timerange.startts)
+            logger.debug(f"[ORDERFLOW] Adding start time filter: timestamp >= {start_ms}")
+            exprs.append(ts_field >= start_ms)
         if stop_set:
-            exprs.append(ts_field <= timerange.stopts)
+            stop_ms = int(timerange.stopts)
+            logger.debug(f"[ORDERFLOW] Adding stop time filter: timestamp <= {stop_ms}")
+            exprs.append(ts_field <= stop_ms)
 
         if len(exprs) == 1:
             return exprs[0]
@@ -156,27 +162,53 @@ class FeatherDataHandler(IDataHandler):
         if not filename.exists():
             return DataFrame(columns=DEFAULT_TRADES_COLUMNS)
 
+        # Calculate millisecond boundaries for filtering
+        # timerange.startts/stopts are already in milliseconds
+        start_ms: int | None = None
+        stop_ms: int | None = None
+        if timerange is not None:
+            if timerange.startts is not None and timerange.startts > 0:
+                start_ms = int(timerange.startts)
+            if timerange.stopts is not None and timerange.stopts > 0:
+                stop_ms = int(timerange.stopts)
+
+        logger.info(
+            f"[ORDERFLOW] Loading trades for {pair}: "
+            f"start_ms={start_ms}, stop_ms={stop_ms}, "
+            f"timerange: {timerange}, "
+            f"startts={getattr(timerange, 'startts', None)}, "
+            f"stopts={getattr(timerange, 'stopts', None)})"
+        )
+
         # Use Arrow dataset with optional timerange filtering, fallback to read_feather
         try:
             dataset_reader = dataset.dataset(filename, format="feather")
             time_filter = self._build_arrow_time_filter(timerange)
 
-            if time_filter is not None and timerange is not None:
+            if time_filter is not None:
                 tradesdata = dataset_reader.to_table(filter=time_filter).to_pandas()
-                start_desc = timerange.startts if timerange.startts > 0 else "unbounded"
-                stop_desc = timerange.stopts if timerange.stopts > 0 else "unbounded"
-                logger.debug(
-                    f"Loaded {len(tradesdata)} trades for {pair} "
-                    f"(filtered start={start_desc}, stop={stop_desc})"
-                )
             else:
                 tradesdata = dataset_reader.to_table().to_pandas()
-                logger.debug(f"Loaded {len(tradesdata)} trades for {pair} (unfiltered)")
 
         except (ImportError, AttributeError, ValueError) as e:
             # Fallback: load entire file
             logger.warning(f"Unable to use Arrow filtering, loading entire trades file: {e}")
             tradesdata = read_feather(filename)
+
+        # Apply final pandas filtering to ensure correct boundaries
+        if start_ms is not None:
+            tradesdata = tradesdata[tradesdata["timestamp"] >= start_ms]
+        if stop_ms is not None:
+            tradesdata = tradesdata[tradesdata["timestamp"] <= stop_ms]
+
+        memory_mb = tradesdata.memory_usage(deep=True).sum() / 1024 / 1024
+        logger.info(
+            f"[ORDERFLOW] Loaded {len(tradesdata)} trades for {pair}, "
+            f"memory: {memory_mb:.2f} MB, "
+            f"time range: {tradesdata['timestamp'].min()} - {tradesdata['timestamp'].max()}, "
+            f"start_ms={start_ms}, stop_ms={stop_ms}, "
+            f"filtered={len(tradesdata) < len(tradesdata)} ({len(tradesdata)} < {len(tradesdata)})"
+        )
 
         return tradesdata
 

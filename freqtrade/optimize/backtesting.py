@@ -301,6 +301,39 @@ class Backtesting:
         if self.config.get("enable_protections", False):
             self.protections = ProtectionManager(self.config, strategy.protections)
 
+    def _prefetch_freqai_data(self, timerange: TimeRange) -> None:
+        """
+        Prefetch FreqAI data (OHLCV for informative timeframes and backtesting predictions)
+        in parallel before the main backtesting loop.
+        
+        This significantly speeds up FreqAI backtesting by loading all data upfront
+        instead of loading it sequentially for each pair.
+        """
+        if not self.config.get("freqai", {}).get("enabled", False):
+            return
+        
+        try:
+            from freqtrade.freqai.freqai_prefetch import init_prefetcher, clear_prefetcher
+            
+            # Determine number of workers (use half of CPU cores, min 2, max 16)
+            import os
+            cpu_count = os.cpu_count() or 4
+            max_workers = min(max(cpu_count // 2, 2), 16)
+            
+            logger.info(f"Prefetching FreqAI data with {max_workers} parallel workers...")
+            
+            init_prefetcher(
+                config=self.config,
+                pairs=self.pairlists.whitelist,
+                timerange=timerange,
+                max_workers=max_workers,
+            )
+            
+        except ImportError as e:
+            logger.warning(f"FreqAI prefetch not available: {e}")
+        except Exception as e:
+            logger.warning(f"FreqAI prefetch failed, continuing without prefetch: {e}")
+
     def load_bt_data(self) -> tuple[dict[str, DataFrame], TimeRange]:
         """
         Loads backtest data and returns the data combined with the timerange
@@ -1829,6 +1862,9 @@ class Backtesting:
 
         data, timerange = self.load_bt_data()
         logger.info("Dataload complete. Calculating indicators")
+
+        # Prefetch FreqAI data in parallel if enabled
+        self._prefetch_freqai_data(timerange)
 
         self.load_prior_backtest()
 
