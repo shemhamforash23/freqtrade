@@ -15,6 +15,36 @@ logger = logging.getLogger(__name__)
 class ParquetDataHandler(IDataHandler):
     _columns = DEFAULT_DATAFRAME_COLUMNS
 
+    @staticmethod
+    def _timerange_to_filters(
+        timerange: TimeRange | None,
+    ) -> tuple[int | None, int | None, list[tuple[str, str, int]] | None]:
+        """
+        Convert TimeRange to millisecond boundaries and parquet filters.
+
+        Note: timerange.startts/stopts are already in milliseconds when created
+        via dt_ts() (which returns ms). No conversion needed.
+        """
+        start_ms: int | None = None
+        stop_ms: int | None = None
+        filters: list[tuple[str, str, int]] | None = None
+
+        if timerange is not None:
+            # startts/stopts are already in milliseconds (from dt_ts)
+            if timerange.startts is not None and timerange.startts > 0:
+                start_ms = int(timerange.startts)
+            if timerange.stopts is not None and timerange.stopts > 0:
+                stop_ms = int(timerange.stopts)
+
+        if start_ms is not None or stop_ms is not None:
+            filters = []
+            if start_ms is not None:
+                filters.append(("timestamp", ">=", start_ms))
+            if stop_ms is not None:
+                filters.append(("timestamp", "<=", stop_ms))
+
+        return start_ms, stop_ms, filters
+
     def ohlcv_store(
         self, pair: str, timeframe: str, data: DataFrame, candle_type: CandleType
     ) -> None:
@@ -124,8 +154,36 @@ class ParquetDataHandler(IDataHandler):
         if not filename.exists():
             return DataFrame(columns=DEFAULT_TRADES_COLUMNS)
 
-        tradesdata = read_parquet(filename)
+        start_ms, stop_ms, filters = self._timerange_to_filters(timerange)
+        logger.debug(
+            f"[ORDERFLOW] Loading trades for {pair}: start_ms={start_ms}, stop_ms={stop_ms}"
+        )
 
+        try:
+            if filters:
+                tradesdata = read_parquet(filename, filters=filters)
+            else:
+                tradesdata = read_parquet(filename)
+        except Exception as exc:  # pragma: no cover - fallback path
+            if filters:
+                logger.debug(
+                    "Filtered parquet read failed for %s, falling back to full load. Error: %s",
+                    filename,
+                    exc,
+                )
+                tradesdata = read_parquet(filename)
+            else:
+                raise
+
+        if start_ms is not None:
+            tradesdata = tradesdata[tradesdata["timestamp"] >= start_ms]
+        if stop_ms is not None:
+            tradesdata = tradesdata[tradesdata["timestamp"] <= stop_ms]
+
+        memory_mb = tradesdata.memory_usage(deep=True).sum() / 1024 / 1024
+        logger.debug(
+            f"[ORDERFLOW] Loaded {len(tradesdata)} trades for {pair}, memory: {memory_mb:.2f} MB"
+        )
         return tradesdata
 
     @classmethod

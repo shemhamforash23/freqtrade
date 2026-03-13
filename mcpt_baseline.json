@@ -1,0 +1,447 @@
+{
+  "meta": {
+    "timestamp": "2026-03-04T02:26:23",
+    "git_sha": "706955e5f",
+    "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.13.2",
+    "numpy": "2.3.5",
+    "pandas": "2.3.3"
+  },
+  "benchmarks": {
+    "ts1__n_trades=50": {
+      "label": "permute()  n_trades=50",
+      "component": "TS-1",
+      "mean_s": 4.7983217518776657e-05,
+      "std_s": 1.6451735623837868e-05,
+      "min_s": 3.458291757851839e-05,
+      "max_s": 8.025008719414473e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.008575439453125,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 50
+      }
+    },
+    "ts1__n_trades=200": {
+      "label": "permute()  n_trades=200",
+      "component": "TS-1",
+      "mean_s": 3.792500356212258e-05,
+      "std_s": 3.4603393429453793e-06,
+      "min_s": 3.454193938523531e-05,
+      "max_s": 4.583306144922972e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.0160369873046875,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 200
+      }
+    },
+    "ts1__n_trades=500": {
+      "label": "permute()  n_trades=500",
+      "component": "TS-1",
+      "mean_s": 3.6025268491357566e-05,
+      "std_s": 2.1013195317213387e-06,
+      "min_s": 3.416696563363075e-05,
+      "max_s": 4.1041988879442215e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.031978607177734375,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 500
+      }
+    },
+    "ts2__n_trades=50__n_runs=100__metric=sharpe": {
+      "label": "_run_permutations  n=50 x  100 runs  sharpe",
+      "component": "TS-2",
+      "mean_s": 0.004647020914126188,
+      "std_s": 0.0003956789430722889,
+      "min_s": 0.004304999951273203,
+      "max_s": 0.005608999985270202,
+      "throughput": 21519.162889070773,
+      "peak_memory_mb": 0.04120635986328125,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 50,
+        "n_runs": 100,
+        "metric": "sharpe"
+      }
+    },
+    "ts2__n_trades=50__n_runs=100__metric=profit_factor": {
+      "label": "_run_permutations  n=50 x  100 runs  profit_factor",
+      "component": "TS-2",
+      "mean_s": 0.004216870607342571,
+      "std_s": 0.00022349893291075693,
+      "min_s": 0.00393320806324482,
+      "max_s": 0.004625041037797928,
+      "throughput": 23714.268070231108,
+      "peak_memory_mb": 0.043426513671875,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 50,
+        "n_runs": 100,
+        "metric": "profit_factor"
+      }
+    },
+    "ts2__n_trades=200__n_runs=500__metric=sharpe": {
+      "label": "_run_permutations  n=200 x  500 runs  sharpe",
+      "component": "TS-2",
+      "mean_s": 0.02645032061263919,
+      "std_s": 0.0007321347312862715,
+      "min_s": 0.024648500024341047,
+      "max_s": 0.02724012511316687,
+      "throughput": 18903.362546050834,
+      "peak_memory_mb": 0.12184524536132812,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 200,
+        "n_runs": 500,
+        "metric": "sharpe"
+      }
+    },
+    "ts2__n_trades=200__n_runs=500__metric=profit_factor": {
+      "label": "_run_permutations  n=200 x  500 runs  profit_factor",
+      "component": "TS-2",
+      "mean_s": 0.022973658214323223,
+      "std_s": 0.0006904469023084912,
+      "min_s": 0.022090040962211788,
+      "max_s": 0.023981209029443562,
+      "throughput": 21764.056700742094,
+      "peak_memory_mb": 0.12406539916992188,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 200,
+        "n_runs": 500,
+        "metric": "profit_factor"
+      }
+    },
+    "ts2__n_trades=200__n_runs=500__metric=max_drawdown": {
+      "label": "_run_permutations  n=200 x  500 runs  max_drawdown",
+      "component": "TS-2",
+      "mean_s": 0.022230353986378758,
+      "std_s": 0.0006124184113614413,
+      "min_s": 0.020961291971616447,
+      "max_s": 0.023256790940649807,
+      "throughput": 22491.76960053654,
+      "peak_memory_mb": 0.1219940185546875,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 200,
+        "n_runs": 500,
+        "metric": "max_drawdown"
+      }
+    },
+    "ts2__n_trades=200__n_runs=1000__metric=sharpe": {
+      "label": "_run_permutations  n=200 x 1000 runs  sharpe",
+      "component": "TS-2",
+      "mean_s": 0.05141349589684978,
+      "std_s": 0.0015281900221151353,
+      "min_s": 0.04821908404119313,
+      "max_s": 0.053522625006735325,
+      "throughput": 19450.14596957746,
+      "peak_memory_mb": 0.13702011108398438,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 200,
+        "n_runs": 1000,
+        "metric": "sharpe"
+      }
+    },
+    "ts2__n_trades=500__n_runs=1000__metric=sharpe": {
+      "label": "_run_permutations  n=500 x 1000 runs  sharpe",
+      "component": "TS-2",
+      "mean_s": 0.05621751670259982,
+      "std_s": 0.0020471844293794886,
+      "min_s": 0.052746249944902956,
+      "max_s": 0.06001237500458956,
+      "throughput": 17788.050035901964,
+      "peak_memory_mb": 0.15999221801757812,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 500,
+        "n_runs": 1000,
+        "metric": "sharpe"
+      }
+    },
+    "ts2__n_trades=500__n_runs=5000__metric=sharpe": {
+      "label": "_run_permutations  n=500 x 5000 runs  sharpe",
+      "component": "TS-2",
+      "mean_s": 0.290458675136324,
+      "std_s": 0.018979356800145657,
+      "min_s": 0.26184820802882314,
+      "max_s": 0.3392617499921471,
+      "throughput": 17214.15274532013,
+      "peak_memory_mb": 0.2798652648925781,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_trades": 500,
+        "n_runs": 5000,
+        "metric": "sharpe"
+      }
+    },
+    "ts3__metric=sharpe": {
+      "label": "_calculate_trade_metric  metric=sharpe  n_trades=200",
+      "component": "TS-3",
+      "mean_s": 9.982541669160128e-06,
+      "std_s": 3.5165144071518044e-06,
+      "min_s": 8.66700429469347e-06,
+      "max_s": 3.170908894389868e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.0026092529296875,
+      "n_warmup": 3,
+      "n_reps": 50,
+      "params": {
+        "metric": "sharpe",
+        "n_trades": 200
+      }
+    },
+    "ts3__metric=sortino": {
+      "label": "_calculate_trade_metric  metric=sortino  n_trades=200",
+      "component": "TS-3",
+      "mean_s": 1.0760081931948661e-05,
+      "std_s": 1.566740955306636e-06,
+      "min_s": 9.833020158112049e-06,
+      "max_s": 1.6666948795318604e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.0025482177734375,
+      "n_warmup": 3,
+      "n_reps": 50,
+      "params": {
+        "metric": "sortino",
+        "n_trades": 200
+      }
+    },
+    "ts3__metric=profit_factor": {
+      "label": "_calculate_trade_metric  metric=profit_factor  n_trades=200",
+      "component": "TS-3",
+      "mean_s": 5.779142957180738e-06,
+      "std_s": 8.478451012986622e-07,
+      "min_s": 5.500041879713535e-06,
+      "max_s": 1.1666910722851753e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.0016937255859375,
+      "n_warmup": 3,
+      "n_reps": 50,
+      "params": {
+        "metric": "profit_factor",
+        "n_trades": 200
+      }
+    },
+    "ts3__metric=max_drawdown": {
+      "label": "_calculate_trade_metric  metric=max_drawdown  n_trades=200",
+      "component": "TS-3",
+      "mean_s": 4.892388824373484e-06,
+      "std_s": 1.3587976368455787e-06,
+      "min_s": 4.415982402861118e-06,
+      "max_s": 1.3916054740548134e-05,
+      "throughput": null,
+      "peak_memory_mb": 0.005747795104980469,
+      "n_warmup": 3,
+      "n_reps": 50,
+      "params": {
+        "metric": "max_drawdown",
+        "n_trades": 200
+      }
+    },
+    "bp1__n_bars=5000": {
+      "label": "_permute_df_with_indices  n_bars= 5,000",
+      "component": "BP-1",
+      "mean_s": 0.0015154416905716062,
+      "std_s": 0.00027581421927744065,
+      "min_s": 0.0013701249845325947,
+      "max_s": 0.002321167034097016,
+      "throughput": null,
+      "peak_memory_mb": 1.0774803161621094,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_bars": 5000,
+        "block_size": 20
+      }
+    },
+    "bp1__n_bars=20000": {
+      "label": "_permute_df_with_indices  n_bars=20,000",
+      "component": "BP-1",
+      "mean_s": 0.004872275085654109,
+      "std_s": 0.0001627289615798511,
+      "min_s": 0.004665749962441623,
+      "max_s": 0.005218083970248699,
+      "throughput": null,
+      "peak_memory_mb": 4.281826019287109,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_bars": 20000,
+        "block_size": 20
+      }
+    },
+    "bp1__n_bars=50000": {
+      "label": "_permute_df_with_indices  n_bars=50,000",
+      "component": "BP-1",
+      "mean_s": 0.011758979188743978,
+      "std_s": 0.0001846633586422991,
+      "min_s": 0.011468959040939808,
+      "max_s": 0.012040124973282218,
+      "throughput": null,
+      "peak_memory_mb": 10.690303802490234,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_bars": 50000,
+        "block_size": 20
+      }
+    },
+    "bp2__pairs=1__n_bars=5000": {
+      "label": "permute()  1 pair(s) x  5,000 bars",
+      "component": "BP-2",
+      "mean_s": 0.0017589041031897067,
+      "std_s": 9.689786895593683e-05,
+      "min_s": 0.0016207500593736768,
+      "max_s": 0.0019536250038072467,
+      "throughput": null,
+      "peak_memory_mb": 1.3482818603515625,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_pairs": 1,
+        "n_bars": 5000,
+        "block_size": 20
+      }
+    },
+    "bp2__pairs=1__n_bars=20000": {
+      "label": "permute()  1 pair(s) x 20,000 bars",
+      "component": "BP-2",
+      "mean_s": 0.006029191799461842,
+      "std_s": 0.00017943854711500868,
+      "min_s": 0.005673124920576811,
+      "max_s": 0.0062481670174747705,
+      "throughput": null,
+      "peak_memory_mb": 5.3537139892578125,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_pairs": 1,
+        "n_bars": 20000,
+        "block_size": 20
+      }
+    },
+    "bp2__pairs=5__n_bars=5000": {
+      "label": "permute()  5 pair(s) x  5,000 bars",
+      "component": "BP-2",
+      "mean_s": 0.008300158428028226,
+      "std_s": 0.0002556802185727688,
+      "min_s": 0.008034458034671843,
+      "max_s": 0.008711750037036836,
+      "throughput": null,
+      "peak_memory_mb": 2.2855987548828125,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_pairs": 5,
+        "n_bars": 5000,
+        "block_size": 20
+      }
+    },
+    "bp2__pairs=5__n_bars=20000": {
+      "label": "permute()  5 pair(s) x 20,000 bars",
+      "component": "BP-2",
+      "mean_s": 0.02762934591155499,
+      "std_s": 0.0005500743995876075,
+      "min_s": 0.02691124996636063,
+      "max_s": 0.02852520893793553,
+      "throughput": null,
+      "peak_memory_mb": 8.59417724609375,
+      "n_warmup": 3,
+      "n_reps": 10,
+      "params": {
+        "n_pairs": 5,
+        "n_bars": 20000,
+        "block_size": 20
+      }
+    },
+    "bp3__pairs=1__n_bars=5000__n_runs=10": {
+      "label": "permute_batch()  1 pair(s) x  5,000 bars x 10 runs",
+      "component": "BP-3",
+      "mean_s": 0.016554524796083568,
+      "std_s": 0.00025697156506263475,
+      "min_s": 0.0161214160034433,
+      "max_s": 0.016832874971441925,
+      "throughput": 604.0644550767037,
+      "peak_memory_mb": 3.4593887329101562,
+      "n_warmup": 1,
+      "n_reps": 5,
+      "params": {
+        "n_pairs": 1,
+        "n_bars": 5000,
+        "n_runs": 10,
+        "block_size": 20
+      }
+    },
+    "bp3__pairs=1__n_bars=20000__n_runs=20": {
+      "label": "permute_batch()  1 pair(s) x 20,000 bars x 20 runs",
+      "component": "BP-3",
+      "mean_s": 0.11987735002767294,
+      "std_s": 0.0015898201447325357,
+      "min_s": 0.11828437505755574,
+      "max_s": 0.12289237498771399,
+      "throughput": 166.83718813756832,
+      "peak_memory_mb": 22.861244201660156,
+      "n_warmup": 1,
+      "n_reps": 5,
+      "params": {
+        "n_pairs": 1,
+        "n_bars": 20000,
+        "n_runs": 20,
+        "block_size": 20
+      }
+    },
+    "bp3__pairs=5__n_bars=5000__n_runs=10": {
+      "label": "permute_batch()  5 pair(s) x  5,000 bars x 10 runs",
+      "component": "BP-3",
+      "mean_s": 0.0861037754220888,
+      "std_s": 0.0016043932526198582,
+      "min_s": 0.0846561670769006,
+      "max_s": 0.0885052919620648,
+      "throughput": 116.13892597599884,
+      "peak_memory_mb": 12.85540771484375,
+      "n_warmup": 1,
+      "n_reps": 5,
+      "params": {
+        "n_pairs": 5,
+        "n_bars": 5000,
+        "n_runs": 10,
+        "block_size": 20
+      }
+    },
+    "bp3__pairs=5__n_bars=20000__n_runs=10": {
+      "label": "permute_batch()  5 pair(s) x 20,000 bars x 10 runs",
+      "component": "BP-3",
+      "mean_s": 0.27431462495587766,
+      "std_s": 0.0044159224335589406,
+      "min_s": 0.26706999994348735,
+      "max_s": 0.27936329192016274,
+      "throughput": 36.45449090294933,
+      "peak_memory_mb": 46.072113037109375,
+      "n_warmup": 1,
+      "n_reps": 5,
+      "params": {
+        "n_pairs": 5,
+        "n_bars": 20000,
+        "n_runs": 10,
+        "block_size": 20
+      }
+    }
+  }
+}

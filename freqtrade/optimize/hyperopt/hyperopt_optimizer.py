@@ -131,6 +131,38 @@ class HyperOptimizer:
 
         self.prepare_hyperopt_data()
 
+        # Enable ohlcv cache when entry/exit signals are constant across epochs.
+        # Safe when: buy/indicator spaces inactive (signals don't change) AND either
+        # the strategy doesn't override populate_exit_trend OR sell space is inactive.
+        # strategy_safe_wrapper uses @wraps(f), so method.__wrapped__ is the original fn.
+        # Check whether populate_exit_trend actually sets exit signal columns (exit_long /
+        # exit_short) by scanning bytecode constants. A no-op override like `return dataframe`
+        # won't reference those string constants, so caching is safe even when sell space is
+        # active — sell params affect custom_stoploss/custom_exit, not signal columns.
+        _exit_method = type(self.backtesting.strategy).__dict__.get("populate_exit_trend")
+        _exit_fn = getattr(_exit_method, "__wrapped__", _exit_method)
+        _exit_qualname = getattr(_exit_fn, "__qualname__", "")
+        if _exit_qualname.startswith("IStrategy."):
+            _strategy_sets_exit_signals = False
+        else:
+            _exit_consts = getattr(getattr(_exit_fn, "__code__", None), "co_consts", ())
+            _strategy_sets_exit_signals = (
+                "exit_long" in _exit_consts or "exit_short" in _exit_consts
+            )
+        _can_cache_ohlcv = (
+            not self.analyze_per_epoch
+            and not HyperoptTools.has_space(self.config, "buy")
+            and not HyperoptTools.has_space(self.config, "indicator")
+            and (
+                not _strategy_sets_exit_signals or not HyperoptTools.has_space(self.config, "sell")
+            )
+        )
+        if _can_cache_ohlcv:
+            self.backtesting._ohlcv_lists_cache_enabled = True
+            logger.info(
+                "HyperOpt: ohlcv cache enabled — entry/exit signals are constant across epochs"
+            )
+
         # We don't need exchange instance anymore while running hyperopt
         self.backtesting.exchange.close()
         self.backtesting.exchange._api = None

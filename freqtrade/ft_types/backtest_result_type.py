@@ -12,10 +12,11 @@ class BacktestMetadataType(TypedDict):
     backtest_start_time: int
 
 
-class BacktestResultType(TypedDict):
+class BacktestResultType(TypedDict, total=False):
     metadata: dict[str, Any]  # BacktestMetadataType
     strategy: dict[str, Any]
     strategy_comparison: list[Any]
+    mcpt: dict[str, Any]  # MCPT validation results per strategy
 
 
 def get_BacktestResultType_default() -> BacktestResultType:
@@ -26,6 +27,7 @@ def get_BacktestResultType_default() -> BacktestResultType:
                 "metadata": {},
                 "strategy": {},
                 "strategy_comparison": [],
+                "mcpt": {},
             }
         ),
     )

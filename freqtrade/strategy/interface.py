@@ -1772,9 +1772,21 @@ class IStrategy(ABC, HyperStrategyMixin):
             if not dataframe.empty:
                 start_ts = dt_ts(dataframe["date"].iloc[0])
                 end_ts = dt_ts(dataframe["date"].iloc[-1])
+
+                orderflow_conf = self.config.get("orderflow", {})
+                max_candles = int(orderflow_conf.get("max_candles", 0))
+                if max_candles > 0:
+                    # dt_ts returns milliseconds, so convert lookback to milliseconds
+                    lookback_ms = (
+                        max_candles * timeframe_to_seconds(self.config["timeframe"]) * 1000
+                    )
+                    start_ts = max(0, start_ts - lookback_ms)
+
                 timerange = TimeRange("date", "date", startts=start_ts, stopts=end_ts)
+                logger.info(f"Loading trades for {pair} with timerange: {timerange}")
             else:
                 timerange = None
+                logger.info(f"Loading trades for {pair} with no timerange")
 
             trades = self.dp.trades(pair=pair, copy=False, timerange=timerange)
 

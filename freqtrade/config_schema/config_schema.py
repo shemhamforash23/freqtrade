@@ -514,6 +514,10 @@ CONF_SCHEMA = {
             "description": "FreqAI configuration.",
             "$ref": "#/definitions/freqai",
         },
+        "mcpt": {
+            "description": "Monte Carlo Permutation Test configuration.",
+            "$ref": "#/definitions/mcpt",
+        },
         "external_message_consumer": {
             "description": "Configuration for external message consumer.",
             "$ref": "#/definitions/external_message_consumer",
@@ -1454,6 +1458,99 @@ CONF_SCHEMA = {
                 "feature_parameters",
                 "data_split_parameters",
             ],
+        },
+        "mcpt": {
+            "type": "object",
+            "description": "Monte Carlo Permutation Test configuration for backtesting.",
+            "properties": {
+                "enabled": {
+                    "description": "Whether MCPT is enabled.",
+                    "type": "boolean",
+                    "default": False,
+                },
+                "seed": {
+                    "description": "Global random seed for reproducibility. Null for random.",
+                    "type": ["integer", "null"],
+                    "default": None,
+                },
+                "hyperopt": {
+                    "description": "MCPT configuration for hyperopt.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Whether MCPT is enabled for hyperopt.",
+                            "type": "boolean",
+                            "default": False,
+                        },
+                    },
+                },
+                "methods": {
+                    "description": "List of MCPT methods to run sequentially.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "description": "Method name.",
+                                "type": "string",
+                                "enum": ["trade_shuffle", "bar_permute"],
+                            },
+                            "enabled": {
+                                "description": "Whether this method is enabled.",
+                                "type": "boolean",
+                                "default": True,
+                            },
+                            "runs": {
+                                "description": "Number of permutation runs.",
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 10000000,
+                                "default": 1000,
+                            },
+                            "metric": {
+                                "description": "Metric to test for significance.",
+                                "type": "string",
+                                "enum": [
+                                    "profit_total",
+                                    "profit_total_abs",
+                                    "sharpe",
+                                    "sortino",
+                                    "calmar",
+                                    "profit_factor",
+                                    "max_drawdown",
+                                ],
+                                "default": "profit_total",
+                            },
+                            "scope": {
+                                "description": (
+                                    "Scope for trade_shuffle: 'global', 'by_pair', "
+                                    "or 'by_direction'."
+                                ),
+                                "type": "string",
+                                "enum": ["global", "by_pair", "by_direction"],
+                                "default": "global",
+                            },
+                            "block_size": {
+                                "description": (
+                                    "Block size for bar_permute. Recommended: 20-288 candles."
+                                ),
+                                "type": "integer",
+                                "minimum": 1,
+                                "default": 20,
+                            },
+                            "jobs": {
+                                "description": ("Parallel jobs for bar_permute. -1 uses all CPUs."),
+                                "type": "integer",
+                                "minimum": -1,
+                                "default": -1,
+                            },
+                        },
+                        "required": ["name"],
+                    },
+                    "default": [],
+                },
+            },
+            "required": ["enabled"],
         },
     },
 }

@@ -51,6 +51,7 @@ class DataProvider:
         self.__cached_pairs: dict[PairWithTimeframe, tuple[DataFrame, datetime]] = {}
         self.__slice_index: dict[str, int] = {}
         self.__slice_date: datetime | None = None
+        self.__analyzed_df_cache: dict[PairWithTimeframe, tuple[int, DataFrame, datetime]] = {}
 
         self.__cached_pairs_backtesting: dict[PairWithTimeframe, DataFrame] = {}
         self.__producer_pairs_df: dict[
@@ -411,7 +412,12 @@ class DataProvider:
             else:
                 df, date = self.__cached_pairs[pair_key]
                 if (max_index := self.__slice_index.get(pair)) is not None:
-                    df = df.iloc[max(0, max_index - MAX_DATAFRAME_CANDLES) : max_index]
+                    cached = self.__analyzed_df_cache.get(pair_key)
+                    if cached is not None and cached[0] == max_index:
+                        return cached[1], cached[2]
+                    sliced = df.iloc[max(0, max_index - MAX_DATAFRAME_CANDLES) : max_index]
+                    self.__analyzed_df_cache[pair_key] = (max_index, sliced, date)
+                    df = sliced
                 else:
                     return (DataFrame(), datetime.fromtimestamp(0, tz=UTC))
             return df, date
@@ -449,6 +455,7 @@ class DataProvider:
         # otherwise they're reloaded each time during hyperopt due to with analyze_per_epoch
         # self.__cached_pairs_backtesting = {}
         self.__slice_index = {}
+        self.__analyzed_df_cache = {}
 
     # Exchange functions
 

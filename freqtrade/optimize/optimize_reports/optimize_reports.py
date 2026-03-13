@@ -488,49 +488,78 @@ def generate_strategy_stats(
     start_balance = get_dry_run_wallet(config)
     stake_currency = config["stake_currency"]
 
-    pair_results = generate_pair_metrics(
-        pairlist,
-        stake_currency=stake_currency,
-        starting_balance=start_balance,
-        results=results,
-        min_date=min_date,
-        max_date=max_date,
-        skip_nan=False,
-    )
-
-    enter_tag_stats = generate_tag_metrics(
-        "enter_tag",
-        starting_balance=start_balance,
-        results=results,
-        min_date=min_date,
-        max_date=max_date,
-        skip_nan=False,
-    )
-    exit_reason_stats = generate_tag_metrics(
-        "exit_reason",
-        starting_balance=start_balance,
-        results=results,
-        min_date=min_date,
-        max_date=max_date,
-        skip_nan=False,
-    )
-    mix_tag_stats = generate_tag_metrics(
-        ["enter_tag", "exit_reason"],
-        starting_balance=start_balance,
-        results=results,
-        min_date=min_date,
-        max_date=max_date,
-        skip_nan=False,
-    )
-    left_open_results = generate_pair_metrics(
-        pairlist,
-        stake_currency=stake_currency,
-        starting_balance=start_balance,
-        results=results.loc[results["exit_reason"] == "force_exit"],
-        min_date=min_date,
-        max_date=max_date,
-        skip_nan=True,
-    )
+    if not is_hyperopt:
+        pair_results = generate_pair_metrics(
+            pairlist,
+            stake_currency=stake_currency,
+            starting_balance=start_balance,
+            results=results,
+            min_date=min_date,
+            max_date=max_date,
+            skip_nan=False,
+        )
+        enter_tag_stats = generate_tag_metrics(
+            "enter_tag",
+            starting_balance=start_balance,
+            results=results,
+            min_date=min_date,
+            max_date=max_date,
+            skip_nan=False,
+        )
+        exit_reason_stats = generate_tag_metrics(
+            "exit_reason",
+            starting_balance=start_balance,
+            results=results,
+            min_date=min_date,
+            max_date=max_date,
+            skip_nan=False,
+        )
+        mix_tag_stats = generate_tag_metrics(
+            ["enter_tag", "exit_reason"],
+            starting_balance=start_balance,
+            results=results,
+            min_date=min_date,
+            max_date=max_date,
+            skip_nan=False,
+        )
+        left_open_results = generate_pair_metrics(
+            pairlist,
+            stake_currency=stake_currency,
+            starting_balance=start_balance,
+            results=results.loc[results["exit_reason"] == "force_exit"],
+            min_date=min_date,
+            max_date=max_date,
+            skip_nan=True,
+        )
+        trades_dict = results.to_dict(orient="records")
+        best_pair = (
+            max(
+                [pair for pair in pair_results if pair["key"] != "TOTAL"],
+                key=lambda x: x["profit_total_abs"],
+            )
+            if len(pair_results) > 1
+            else None
+        )
+        worst_pair = (
+            min(
+                [pair for pair in pair_results if pair["key"] != "TOTAL"],
+                key=lambda x: x["profit_total_abs"],
+            )
+            if len(pair_results) > 1
+            else None
+        )
+        total_volume = calculate_trade_volume(trades_dict)
+    else:
+        # Skip display-only computations during hyperopt — not used by any loss function.
+        pair_results = []
+        enter_tag_stats = []
+        exit_reason_stats = []
+        mix_tag_stats = []
+        left_open_results = []
+        trades_dict = []
+        best_pair = None
+        worst_pair = None
+        total_volume = 0.0
 
     daily_stats = generate_daily_stats(results)
     trade_stats = generate_trading_stats(results)
@@ -539,29 +568,12 @@ def generate_strategy_stats(
     if not is_hyperopt:
         periodic_breakdown = {"periodic_breakdown": generate_all_periodic_breakdown_stats(results)}
 
-    best_pair = (
-        max(
-            [pair for pair in pair_results if pair["key"] != "TOTAL"],
-            key=lambda x: x["profit_total_abs"],
-        )
-        if len(pair_results) > 1
-        else None
-    )
-    worst_pair = (
-        min(
-            [pair for pair in pair_results if pair["key"] != "TOTAL"],
-            key=lambda x: x["profit_total_abs"],
-        )
-        if len(pair_results) > 1
-        else None
-    )
     winning_profit = results.loc[results["profit_abs"] > 0, "profit_abs"].sum()
     losing_profit = results.loc[results["profit_abs"] < 0, "profit_abs"].sum()
     profit_factor = winning_profit / abs(losing_profit) if losing_profit else 0.0
 
     expectancy, expectancy_ratio = calculate_expectancy(results)
     backtest_days = (max_date - min_date).days or 1
-    trades_dict = results.to_dict(orient="records")
     strat_stats = {
         "trades": trades_dict,
         "locks": [lock.to_json() for lock in content["locks"]],
@@ -575,7 +587,7 @@ def generate_strategy_stats(
         "total_trades": len(results),
         "trade_count_long": len(results.loc[~results["is_short"]]),
         "trade_count_short": len(results.loc[results["is_short"]]),
-        "total_volume": calculate_trade_volume(trades_dict),
+        "total_volume": total_volume,
         "avg_stake_amount": results["stake_amount"].mean() if len(results) > 0 else 0,
         "profit_mean": results["profit_ratio"].mean() if len(results) > 0 else 0,
         "profit_median": results["profit_ratio"].median() if len(results) > 0 else 0,

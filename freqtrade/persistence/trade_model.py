@@ -465,6 +465,29 @@ class LocalTrade:
     # v 2 -> correct max_stake_amount calculation for leveraged trades
     record_version: int = 2
 
+    def __deepcopy__(self, memo: dict) -> "LocalTrade":
+        """Fast deepcopy for backtesting strategy callbacks (strategy_safe_wrapper).
+
+        All LocalTrade scalar attributes are Python immutables (float, str, int, bool,
+        datetime, TradingMode enum) — shallow-copying __dict__ is sufficient for them.
+        Only the orders list requires an independent copy, and each Order's _trade_bt
+        back-reference must be updated to point to the new trade instance.
+
+        Replaces ~197 recursive copy.deepcopy() calls per invocation with a single
+        dict copy + O(n_orders) shallow loop.
+        """
+        new = object.__new__(LocalTrade)
+        memo[id(self)] = new
+        new.__dict__ = self.__dict__.copy()
+        copied_orders: list[Order] = []
+        for o in self.orders:
+            new_o = object.__new__(o.__class__)
+            new_o.__dict__ = o.__dict__.copy()
+            new_o._trade_bt = new
+            copied_orders.append(new_o)
+        new.orders = copied_orders
+        return new
+
     @property
     def stoploss_or_liquidation(self) -> float:
         if self.liquidation_price:

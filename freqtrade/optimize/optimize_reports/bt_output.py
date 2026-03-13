@@ -478,6 +478,54 @@ def show_backtest_result(
     print()
 
 
+def text_table_mcpt(mcpt_results: dict[str, Any]) -> None:
+    """
+    Generate MCPT results table.
+
+    :param mcpt_results: Dict with MCPT results per strategy (list of method results)
+    """
+    if not mcpt_results:
+        return
+
+    output = []
+    for strategy, results in mcpt_results.items():
+        # Support both old format (single dict) and new format (list of dicts)
+        if isinstance(results, dict):
+            results = [results]
+
+        for result in results:
+            p_value = result.get("p_value", 0)
+
+            # Determine significance level and symbol
+            if p_value < 0.01:
+                sig_level = "Very Strong"
+                symbol = "✓✓"
+            elif p_value < 0.05:
+                sig_level = "Significant"
+                symbol = "✓"
+            elif p_value < 0.10:
+                sig_level = "Marginal"
+                symbol = "~"
+            else:
+                sig_level = "Not Significant"
+                symbol = "✗"
+
+            output.append(
+                [
+                    strategy,
+                    result.get("method_name", "trade_shuffle"),
+                    result.get("metric_name", ""),
+                    f"{result.get('metric_real', 0):.4f}",
+                    f"{p_value:.4f}",
+                    f"{result.get('count_better', 0)}/{result.get('n_permutations', 0)}",
+                    f"{symbol} {sig_level}",
+                ]
+            )
+
+    headers = ["Strategy", "Method", "Metric", "Value", "p-value", "Better/Total", "Significance"]
+    print_rich_table(output, headers, summary="MCPT VALIDATION RESULTS")
+
+
 def show_backtest_results(config: Config, backtest_stats: BacktestResultType):
     stake_currency = config["stake_currency"]
 
@@ -496,6 +544,10 @@ def show_backtest_results(config: Config, backtest_stats: BacktestResultType):
         text_table_strategy(
             backtest_stats["strategy_comparison"], stake_currency, "STRATEGY SUMMARY"
         )
+
+        # Print MCPT results if available
+        if "mcpt" in backtest_stats:
+            text_table_mcpt(backtest_stats["mcpt"])
 
 
 def show_sorted_pairlist(config: Config, backtest_stats: BacktestResultType):
