@@ -870,45 +870,45 @@ class IFreqaiModel(ABC):
 
     def backtesting_fit_live_predictions(self, dk: FreqaiDataKitchen):
         """
-        Apply fit_live_predictions function in backtesting with a dummy historic_predictions
-        The loop is required to simulate dry/live operation, as it is not possible to predict
-        the type of logic implemented by the user.
+        Apply fit_live_predictions function in backtesting with a dummy historic_predictions.
+        Uses vectorized pandas rolling operations for performance.
         :param dk: datakitchen object
         """
         fit_live_predictions_candles = self.freqai_info.get("fit_live_predictions_candles", 0)
-        if fit_live_predictions_candles:
-            logger.info("Applying fit_live_predictions in backtesting")
-            label_columns = [
-                col
-                for col in dk.full_df.columns
-                if (
-                    col.startswith("&")
-                    and not (col.startswith("&") and col.endswith("_mean"))
-                    and not (col.startswith("&") and col.endswith("_std"))
-                    and col not in self.dk.data["extra_returns_per_train"]
-                )
-            ]
+        if not fit_live_predictions_candles:
+            return
 
-            for index in range(len(dk.full_df)):
-                if index >= fit_live_predictions_candles:
-                    self.dd.historic_predictions[self.dk.pair] = dk.full_df.iloc[
-                        index - fit_live_predictions_candles : index
-                    ]
-                    self.fit_live_predictions(self.dk, self.dk.pair)
-                    for label in label_columns:
-                        if dk.full_df[label].dtype == object:
-                            continue
-                        if "labels_mean" in self.dk.data:
-                            dk.full_df.at[index, f"{label}_mean"] = self.dk.data["labels_mean"][
-                                label
-                            ]
-                        if "labels_std" in self.dk.data:
-                            dk.full_df.at[index, f"{label}_std"] = self.dk.data["labels_std"][label]
+        logger.info("Applying fit_live_predictions in backtesting")
+        
+        # Get label columns (exclude _mean and _std suffixes and extra_returns)
+        label_columns = [
+            col
+            for col in dk.full_df.columns
+            if (
+                col.startswith("&")
+                and not (col.startswith("&") and col.endswith("_mean"))
+                and not (col.startswith("&") and col.endswith("_std"))
+                and col not in self.dk.data["extra_returns_per_train"]
+            )
+        ]
 
-                    for extra_col in self.dk.data["extra_returns_per_train"]:
-                        dk.full_df.at[index, f"{extra_col}"] = self.dk.data[
-                            "extra_returns_per_train"
-                        ][extra_col]
+        # Vectorized rolling computation for mean and std
+        # scipy.stats.norm.fit returns MLE parameters which equal sample mean and std(ddof=0)
+        for label in label_columns:
+            if dk.full_df[label].dtype == object:
+                continue
+            
+            # Compute rolling mean and std using pandas (much faster than scipy loop)
+            rolling = dk.full_df[label].rolling(
+                window=fit_live_predictions_candles, 
+                min_periods=fit_live_predictions_candles
+            )
+            dk.full_df[f"{label}_mean"] = rolling.mean()
+            dk.full_df[f"{label}_std"] = rolling.std(ddof=0)  # ddof=0 for MLE estimate
+
+        # Handle extra_returns_per_train columns (constant values)
+        for extra_col in self.dk.data["extra_returns_per_train"]:
+            dk.full_df[f"{extra_col}"] = self.dk.data["extra_returns_per_train"][extra_col]
 
         return
 

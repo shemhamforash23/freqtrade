@@ -307,30 +307,49 @@ class DataProvider:
         )
         saved_pair: PairWithTimeframe = (pair, str(timeframe), _candle_type)
         if saved_pair not in self.__cached_pairs_backtesting:
-            timerange = TimeRange.parse_timerange(
-                None
-                if self._config.get("timerange") is None
-                else str(self._config.get("timerange"))
-            )
+            # Check FreqAI prefetch cache first
+            prefetched_df = self._get_prefetched_ohlcv(pair, str(timeframe), _candle_type)
+            if prefetched_df is not None:
+                logger.debug(f"Using prefetched data for {pair} {timeframe}")
+                self.__cached_pairs_backtesting[saved_pair] = prefetched_df
+            else:
+                timerange = TimeRange.parse_timerange(
+                    None
+                    if self._config.get("timerange") is None
+                    else str(self._config.get("timerange"))
+                )
 
-            startup_candles = self.get_required_startup(str(timeframe))
-            tf_seconds = timeframe_to_seconds(str(timeframe))
-            timerange.subtract_start(tf_seconds * startup_candles)
+                startup_candles = self.get_required_startup(str(timeframe))
+                tf_seconds = timeframe_to_seconds(str(timeframe))
+                timerange.subtract_start(tf_seconds * startup_candles)
 
-            logger.info(
-                f"Loading data for {pair} {timeframe} "
-                f"from {timerange.start_fmt} to {timerange.stop_fmt}"
-            )
+                logger.info(
+                    f"Loading data for {pair} {timeframe} "
+                    f"from {timerange.start_fmt} to {timerange.stop_fmt}"
+                )
 
-            self.__cached_pairs_backtesting[saved_pair] = load_pair_history(
-                pair=pair,
-                timeframe=timeframe,
-                datadir=self._config["datadir"],
-                timerange=timerange,
-                data_format=self._config["dataformat_ohlcv"],
-                candle_type=_candle_type,
-            )
+                self.__cached_pairs_backtesting[saved_pair] = load_pair_history(
+                    pair=pair,
+                    timeframe=timeframe,
+                    datadir=self._config["datadir"],
+                    timerange=timerange,
+                    data_format=self._config["dataformat_ohlcv"],
+                    candle_type=_candle_type,
+                )
         return self.__cached_pairs_backtesting[saved_pair].copy()
+
+    def _get_prefetched_ohlcv(
+        self, pair: str, timeframe: str, candle_type: CandleType
+    ) -> DataFrame | None:
+        """Check if OHLCV data is available in FreqAI prefetch cache."""
+        try:
+            from freqtrade.freqai.freqai_prefetch import get_prefetcher
+            prefetcher = get_prefetcher()
+            if prefetcher:
+                return prefetcher.get_cached_ohlcv(pair, timeframe, candle_type)
+        except ImportError:
+            pass
+        return None
 
     def get_required_startup(self, timeframe: str) -> int:
         freqai_config = self._config.get("freqai", {})

@@ -25,16 +25,6 @@ class ParquetDataHandler(IDataHandler):
         Note: timerange.startts/stopts are already in milliseconds when created
         via dt_ts() (which returns ms). No conversion needed.
         """
-        start_ms: int | None = None
-        stop_ms: int | None = None
-        filters: list[tuple[str, str, int]] | None = None
-
-        if timerange is not None:
-            # startts/stopts are already in milliseconds (from dt_ts)
-            if timerange.startts is not None and timerange.startts > 0:
-                start_ms = int(timerange.startts)
-            if timerange.stopts is not None and timerange.stopts > 0:
-                stop_ms = int(timerange.stopts)
 
         if start_ms is not None or stop_ms is not None:
             filters = []

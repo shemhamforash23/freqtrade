@@ -563,11 +563,32 @@ class FreqaiDataDrawer:
         """
         Load only metadata into datakitchen to increase performance during
         presaved backtesting (prediction file loading).
+        First checks prefetch cache, then falls back to disk.
         """
+        # Check prefetch cache first
+        cached_metadata = self._get_prefetched_metadata(dk.data_path)
+        if cached_metadata and METADATA in cached_metadata:
+            logger.debug(f"Using prefetched metadata for {dk.data_path.name}")
+            dk.data = cached_metadata[METADATA]
+            dk.training_features_list = dk.data["training_features_list"]
+            dk.label_list = dk.data["label_list"]
+            return
+        
         with (dk.data_path / f"{dk.model_filename}_{METADATA}.json").open("r") as fp:
             dk.data = rapidjson.load(fp, number_mode=METADATA_NUMBER_MODE)
             dk.training_features_list = dk.data["training_features_list"]
             dk.label_list = dk.data["label_list"]
+    
+    def _get_prefetched_metadata(self, model_dir: Path) -> dict | None:
+        """Check if metadata is available in FreqAI prefetch cache."""
+        try:
+            from freqtrade.freqai.freqai_prefetch import get_prefetcher
+            prefetcher = get_prefetcher()
+            if prefetcher:
+                return prefetcher.get_cached_metadata(model_dir)
+        except ImportError:
+            pass
+        return None
 
     def load_data(self, coin: str, dk: FreqaiDataKitchen) -> Any:
         """

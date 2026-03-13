@@ -919,10 +919,28 @@ class FreqaiDataKitchen:
 
     def get_backtesting_prediction(self) -> DataFrame:
         """
-        Get prediction dataframe from feather file format
+        Get prediction dataframe from feather file format.
+        First checks prefetch cache, then falls back to disk.
         """
+        # Check prefetch cache first
+        cached_df = self._get_prefetched_prediction()
+        if cached_df is not None:
+            logger.debug(f"Using prefetched prediction for {self.backtesting_results_path.name}")
+            return cached_df
+        
         append_df = pd.read_feather(self.backtesting_results_path)
         return append_df
+
+    def _get_prefetched_prediction(self) -> DataFrame | None:
+        """Check if prediction is available in FreqAI prefetch cache."""
+        try:
+            from freqtrade.freqai.freqai_prefetch import get_prefetcher
+            prefetcher = get_prefetcher()
+            if prefetcher:
+                return prefetcher.get_cached_prediction(self.backtesting_results_path)
+        except ImportError:
+            pass
+        return None
 
     def check_if_backtest_prediction_is_valid(self, len_backtest_df: int) -> bool:
         """

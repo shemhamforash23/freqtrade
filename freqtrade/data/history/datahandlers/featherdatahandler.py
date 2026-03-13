@@ -194,20 +194,6 @@ class FeatherDataHandler(IDataHandler):
         # Store original length before pandas filtering
         original_len = len(tradesdata)
 
-        # Apply final pandas filtering to ensure correct boundaries
-        if start_ms is not None:
-            tradesdata = tradesdata[tradesdata["timestamp"] >= start_ms]
-        if stop_ms is not None:
-            tradesdata = tradesdata[tradesdata["timestamp"] <= stop_ms]
-
-        final_len = len(tradesdata)
-        was_filtered = final_len < original_len
-
-        memory_mb = tradesdata.memory_usage(deep=True).sum() / 1024 / 1024
-        logger.debug(
-            f"[ORDERFLOW] Loaded {final_len} trades for {pair}, "
-            f"memory: {memory_mb:.2f} MB, "
-            f"filtered={was_filtered} ({original_len} -> {final_len})"
         )
 
         return tradesdata
